@@ -48,6 +48,14 @@ RUN OPENSSL_VERSION="1.0.2k" \
 
 ENV PHP_VERSION 5.3.29
 
+# gd library deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      freetype* \
+      jpeg* \
+      libpng* \
+    && apt-get clean \
+    && rm -r /var/lib/apt/lists/*
+
 # php 5.3 needs older autoconf
 # --enable-mysqlnd is included below because it's harder to compile after the fact the extensions are (since it's a plugin for several extensions, not an extension in itself)
 RUN buildDeps=" \
@@ -83,6 +91,9 @@ RUN buildDeps=" \
             --with-readline \
             --with-recode \
             --with-zlib \
+            --with-jpeg-dir=/usr/local/jpeg \
+            --with-png-dir=/usr/local/libpng \
+            --with-freetype-dir=/usr/local/freetype \
       && make -j"$(nproc)" \
       && make install \
       && { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; } \
