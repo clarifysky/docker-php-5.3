@@ -1,5 +1,10 @@
 FROM debian:jessie
-MAINTAINER https://github.com/helderco/
+LABEL maintainer=https://github.com/helderco/
+
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/' /etc/apt/sources.list && \
+    sed -i 's/security.debian.org/mirrors.aliyun.com/' /etc/apt/sources.list && \
+    sed -i 's/security-cdn.debian.org/mirrors.aliyun.com/' /etc/apt/sources.list && \
+    apt-get update
 
 # persistent / runtime deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -140,6 +145,21 @@ RUN set -ex \
 
 # fix some weird corruption in this file
 RUN sed -i -e "" /usr/local/etc/php-fpm.d/www.conf
+
+# set php.ini
+RUN cp /usr/src/php/php.ini-development /usr/local/etc/php/php.ini
+
+# instal xdebug
+RUN curl -O http://xdebug.org/files/xdebug-2.2.6.tgz && \
+  tar -zxf xdebug-2.2.6.tgz && \
+  cd xdebug-2.2.6 && \
+  phpize && \
+  ./configure --enable-xdebug && \
+  make && \
+  make install && \
+  echo "extension_dir = /usr/local/lib/php/extensions/no-debug-non-zts-20090626/" >> /usr/local/etc/php/php.ini
+
+COPY xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
 EXPOSE 9000
 CMD ["php-fpm"]
